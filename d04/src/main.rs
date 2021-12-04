@@ -2,18 +2,28 @@ use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs;
 
-fn main() {
-    println!("Hello, world!");
-}
-
 type Board = Vec<Vec<u32>>;
-
 type Coords = (usize, usize);
+type MarkedSet = HashSet<Coords>;
+type Draw = u32;
+type BoardId = usize;
+type Win = (Draw, BoardId, MarkedSet);
 
 #[derive(Debug)]
 struct Bingo {
     draws: Vec<u32>,
     boards: Vec<Board>,
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let bingo = parse("d04_input")?;
+    let p1_ans = p1(&bingo)?;
+    println!("p1 = {}", p1_ans);
+
+    let p2_ans = p2(&bingo)?;
+    println!("p1 = {}", p2_ans);
+
+    Ok(())
 }
 
 fn parse(path: &str) -> Result<Bingo, Box<dyn Error>> {
@@ -49,23 +59,6 @@ fn parse(path: &str) -> Result<Bingo, Box<dyn Error>> {
 
     Ok(Bingo { draws, boards })
 }
-
-// fn transpose(board: &Board) -> Board {
-//     let mut transposed = board.clone();
-
-//     for row_idx in 0..board.len() {
-//         for col_idx in 0..board[0].len() {
-//             transposed[col_idx][row_idx] = board[row_idx][col_idx];
-//         }
-//     }
-
-//     transposed
-// }
-
-type MarkedSet = HashSet<(usize, usize)>;
-type Draw = u32;
-type BoardId = usize;
-type Win = (Draw, BoardId, MarkedSet);
 
 fn find_winner(bingo: &Bingo) -> Vec<Win> {
     let mut board_to_matches: HashMap<usize, Vec<Coords>> = HashMap::new();
@@ -147,22 +140,22 @@ mod test {
 
     #[test]
     fn p1_test() {
-        let bingo = parse("d04_test_input").unwrap();
+        let bingo = parse("../d04_test_input").unwrap();
         let p1_ans = p1(&bingo).unwrap();
         assert_eq!(p1_ans, 4512);
 
-        let bingo = parse("d04_input").unwrap();
+        let bingo = parse("../d04_input").unwrap();
         let p1_ans = p1(&bingo).unwrap();
         assert_eq!(p1_ans, 8136);
     }
 
     #[test]
     fn p2_test() {
-        let bingo = parse("d04_test_input").unwrap();
+        let bingo = parse("../d04_test_input").unwrap();
         let p2_ans = p2(&bingo).unwrap();
         assert_eq!(p2_ans, 1924);
 
-        let bingo = parse("d04_input").unwrap();
+        let bingo = parse("../d04_input").unwrap();
         let p2_ans = p2(&bingo).unwrap();
         assert_eq!(p2_ans, 12738);
     }
