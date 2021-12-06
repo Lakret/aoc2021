@@ -9,13 +9,10 @@ def parse(input):
 def step(counts):
     new_counts = Counter()
 
-    if counts[0] > 0:
-        new_counts[6] = counts[0]
-        new_counts[8] = counts[0]
+    new_counts[6], new_counts[8] = counts[0], counts[0]
 
     for days in range(1, 9):
-        if counts[days] > 0:
-            new_counts[days - 1] = new_counts[days - 1] + counts[days]
+        new_counts[days - 1] = new_counts[days - 1] + counts[days]
 
     return new_counts
 
