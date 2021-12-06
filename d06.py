@@ -29,18 +29,21 @@ def run(counts, time=80):
     return sum(counts.values())
 
 
-test_input = "3,4,3,1,2"
-test_counts = parse(test_input)
+if __name__ == "__main__":
+    test_input = "3,4,3,1,2"
+    test_counts = parse(test_input)
 
-assert run(test_counts) == 5934
-assert run(test_counts, 256) == 26984457539
+    assert run(test_counts) == 5934
+    assert run(test_counts, 256) == 26984457539
 
-with open("d06_input", "rt") as f:
-    input = f.read().strip()
+    with open("d06_input", "rt") as f:
+        input = f.read().strip()
 
-counts = parse(input)
-p1_ans = run(counts)
-assert p1_ans == 362_346
+    counts = parse(input)
+    p1_ans = run(counts)
+    assert p1_ans == 362_346
+    print(f"p1: {p1_ans}")
 
-p2_ans = run(counts, 256)
-assert p2_ans == 1639643057051
+    p2_ans = run(counts, 256)
+    assert p2_ans == 1639643057051
+    print(f"p2: {p2_ans}")
