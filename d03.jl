@@ -74,11 +74,11 @@ report = parse_report(input)
 
 p1_ans = power_consumption(report)
 @assert p1_ans == 1540244
-println("p1 = $p1_ans")
+println("p1: $p1_ans")
 
 @assert ratings(test_report) == 23
 @assert ratings(test_report, oxygen = false) == 10
 
 p2_ans = p2(report)
 @assert p2_ans == 4203981
-println("p2 = $p2_ans")
+println("p2: $p2_ans")
