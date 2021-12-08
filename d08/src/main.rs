@@ -19,8 +19,15 @@ lazy_static! {
 type InputPart = Vec<HashSet<char>>;
 type Input = Vec<(InputPart, InputPart)>;
 
-fn main() {
-    println!("Hello, world!");
+fn main() -> Result<(), Box<dyn Error>> {
+    let input = parse("d08_input")?;
+    let p1_ans = p1(&input);
+    println!("p1 = {}", p1_ans);
+
+    let p2_ans = p2(&input);
+    println!("p1 = {}", p2_ans);
+
+    Ok(())
 }
 
 fn p1(input: &Input) -> u32 {

@@ -1,1 +1,1 @@
-(cd d04 && cargo build --release) && ./d04/target/release/d04
+cargo build --release && ./target/release/d04
