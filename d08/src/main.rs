@@ -23,20 +23,54 @@ fn main() {
     println!("Hello, world!");
 }
 
-fn get_a_and_one_and_seven(
-    in_part: &InputPart,
-) -> (
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-    HashSet<char>,
-) {
+fn p1(input: &Input) -> u32 {
+    let mut res = 0;
+
+    for (_, out_part) in input {
+        for w in out_part {
+            if UNIQUE_LENGTH_TO_DIGIT.contains_key(&w.len()) {
+                res += 1;
+            }
+        }
+    }
+
+    res
+}
+
+fn p2(input: &Input) -> u32 {
+    let mut res = 0;
+
+    for (in_part, out_part) in input {
+        let cipher = decipher(&in_part);
+        let out_value = decode_out(&out_part, &cipher);
+        res += out_value;
+    }
+
+    res
+}
+
+fn parse(path: &str) -> Result<Input, Box<dyn Error>> {
+    let input = fs::read_to_string(path)?;
+    input
+        .trim_end()
+        .split("\n")
+        .map(|line| {
+            let mut parts = line.split(" | ");
+            let in_part = parts.next().ok_or("missing in part")?;
+            let out_part = parts.next().ok_or("missing out part")?;
+
+            Ok((parse_part(in_part), parse_part(out_part)))
+        })
+        .collect()
+}
+
+fn parse_part(part: &str) -> Vec<HashSet<char>> {
+    part.split_whitespace()
+        .map(|x| x.chars().collect())
+        .collect::<Vec<_>>()
+}
+
+fn decipher(in_part: &InputPart) -> [HashSet<char>; 10] {
     // we know that 2-len word is always 1, 3-len word is always 7,
     // and the signal that 7 has that 1 doesn't have is `a`.
     let one_chars = in_part.iter().find(|w| w.len() == 2).unwrap().clone();
@@ -105,7 +139,7 @@ fn get_a_and_one_and_seven(
         .unwrap()
         .clone();
 
-    (
+    [
         zero_chars,
         one_chars,
         two_chars,
@@ -116,42 +150,18 @@ fn get_a_and_one_and_seven(
         seven_chars,
         eight_chars,
         nine_chars,
-    )
+    ]
 }
 
-fn p1(input: Input) -> u32 {
-    let mut res = 0;
+fn decode_out(out_part: &InputPart, cipher: &[HashSet<char>; 10]) -> u32 {
+    let mut digits = vec![];
 
-    for (_, out_part) in input {
-        for w in out_part {
-            if UNIQUE_LENGTH_TO_DIGIT.contains_key(&w.len()) {
-                res += 1;
-            }
-        }
+    for out_w in out_part {
+        let digit = cipher.iter().position(|w| w == out_w).unwrap();
+        digits.push(digit.to_string());
     }
 
-    res
-}
-
-fn parse(path: &str) -> Result<Input, Box<dyn Error>> {
-    let input = fs::read_to_string(path)?;
-    input
-        .trim_end()
-        .split("\n")
-        .map(|line| {
-            let mut parts = line.split(" | ");
-            let in_part = parts.next().ok_or("missing in part")?;
-            let out_part = parts.next().ok_or("missing out part")?;
-
-            Ok((parse_part(in_part), parse_part(out_part)))
-        })
-        .collect()
-}
-
-fn parse_part(part: &str) -> Vec<HashSet<char>> {
-    part.split_whitespace()
-        .map(|x| x.chars().collect())
-        .collect::<Vec<_>>()
+    digits.join("").parse::<u32>().unwrap()
 }
 
 #[cfg(test)]
@@ -161,10 +171,10 @@ mod tests {
     #[test]
     fn p1_test() {
         let test_input = parse("../d08_test_input").unwrap();
-        assert_eq!(p1(test_input), 26);
+        assert_eq!(p1(&test_input), 26);
 
         let input = parse("../d08_input").unwrap();
-        assert_eq!(p1(input), 390);
+        assert_eq!(p1(&input), 390);
     }
 
     #[test]
@@ -181,17 +191,29 @@ mod tests {
             .map(|x| x.chars().collect::<HashSet<_>>())
             .collect::<Vec<_>>();
 
-        let (zero, one, two, three, four, five, six, seven, eight, nine) =
-            get_a_and_one_and_seven(&in_part);
-        assert_eq!(zero, "cagedb".chars().collect());
-        assert_eq!(one, "ab".chars().collect());
-        assert_eq!(two, "gcdfa".chars().collect());
-        assert_eq!(three, "fbcad".chars().collect());
-        assert_eq!(four, "abef".chars().collect());
-        assert_eq!(five, "cdfbe".chars().collect());
-        assert_eq!(six, "cdfgeb".chars().collect());
-        assert_eq!(seven, "adb".chars().collect());
-        assert_eq!(eight, "abcdefg".chars().collect());
-        assert_eq!(nine, "cefabd".chars().collect());
+        let cipher = decipher(&in_part);
+
+        let [zero, one, two, three, four, five, six, seven, eight, nine] = &cipher;
+        assert_eq!(zero, &"cagedb".chars().collect());
+        assert_eq!(one, &"ab".chars().collect());
+        assert_eq!(two, &"gcdfa".chars().collect());
+        assert_eq!(three, &"fbcad".chars().collect());
+        assert_eq!(four, &"abef".chars().collect());
+        assert_eq!(five, &"cdfbe".chars().collect());
+        assert_eq!(six, &"cdfgeb".chars().collect());
+        assert_eq!(seven, &"adb".chars().collect());
+        assert_eq!(eight, &"abcdefg".chars().collect());
+        assert_eq!(nine, &"cefabd".chars().collect());
+
+        let t = "cdfeb".chars().collect::<HashSet<_>>();
+        assert_eq!(cipher.iter().position(|w| *w == t).unwrap(), 5);
+
+        assert_eq!(decode_out(&out_part, &cipher), 5353);
+
+        let test_input = parse("../d08_test_input").unwrap();
+        assert_eq!(p2(&test_input), 61229);
+
+        let input = parse("../d08_input").unwrap();
+        assert_eq!(p2(&input), 1011785);
     }
 }
