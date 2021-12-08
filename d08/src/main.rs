@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let p1_ans = p1(&input);
     println!("p1 = {}", p1_ans);
 
-    let p2_ans = p2(&input);
+    let p2_ans = p2(&input)?;
     println!("p1 = {}", p2_ans);
 
     Ok(())
@@ -44,16 +44,16 @@ fn p1(input: &Input) -> u32 {
     res
 }
 
-fn p2(input: &Input) -> u32 {
+fn p2(input: &Input) -> Result<u32, Box<dyn Error>> {
     let mut res = 0;
 
     for (in_part, out_part) in input {
-        let cipher = decipher(&in_part);
-        let out_value = decode_out(&out_part, &cipher);
+        let cipher = decipher(&in_part).ok_or("cannot decipher!")?;
+        let out_value = decode_out(&out_part, &cipher)?;
         res += out_value;
     }
 
-    res
+    Ok(res)
 }
 
 fn parse(path: &str) -> Result<Input, Box<dyn Error>> {
@@ -77,76 +77,68 @@ fn parse_part(part: &str) -> Vec<HashSet<char>> {
         .collect::<Vec<_>>()
 }
 
-fn decipher(in_part: &InputPart) -> [HashSet<char>; 10] {
+fn decipher(in_part: &InputPart) -> Option<[HashSet<char>; 10]> {
     // we know that 2-len word is always 1, 3-len word is always 7,
     // and the signal that 7 has that 1 doesn't have is `a`.
-    let one_chars = in_part.iter().find(|w| w.len() == 2).unwrap().clone();
-    let seven_chars = in_part.iter().find(|w| w.len() == 3).unwrap().clone();
+    let one_chars = in_part.iter().find(|w| w.len() == 2)?.clone();
+    let seven_chars = in_part.iter().find(|w| w.len() == 3)?.clone();
 
     // 2 is the only digit that doesn't have f;
     // `c` is encountered in 8 digits, `f` is encountered in 9 digits.
     // since we know `a` from `get_a`, we can use this to distinguish `c` and `f`
     let c_char = one_chars
         .iter()
-        .find(|ch| in_part.iter().filter(|w| w.contains(ch)).count() == 8)
-        .unwrap()
+        .find(|ch| in_part.iter().filter(|w| w.contains(ch)).count() == 8)?
         .clone();
 
     // four and eight have unique length
-    let four_chars = in_part.iter().find(|w| w.len() == 4).unwrap().clone();
-    let eight_chars = in_part.iter().find(|w| w.len() == 7).unwrap().clone();
+    let four_chars = in_part.iter().find(|w| w.len() == 4)?.clone();
+    let eight_chars = in_part.iter().find(|w| w.len() == 7)?.clone();
 
     // there are three 6-len digits: 0, 6, and 9.
     // 6 is the only one without `c`
     let six_chars = in_part
         .iter()
-        .find(|w| w.len() == 6 && !w.contains(&c_char))
-        .unwrap()
+        .find(|w| w.len() == 6 && !w.contains(&c_char))?
         .clone();
 
     // `e` is the only char that is present in exactly 4 digits
     let e_char = "abcdefg"
         .chars()
-        .find(|ch| in_part.iter().filter(|w| w.contains(ch)).count() == 4)
-        .unwrap()
+        .find(|ch| in_part.iter().filter(|w| w.contains(ch)).count() == 4)?
         .clone();
 
     // 0 is the only 6-len digit with `e`, that is not 6
     let zero_chars = in_part
         .iter()
-        .find(|w| w.len() == 6 && **w != six_chars && w.contains(&e_char))
-        .unwrap()
+        .find(|w| w.len() == 6 && **w != six_chars && w.contains(&e_char))?
         .clone();
 
     // now the only remaining 6-len that is not 0 and not 6 is 9.
     let nine_chars = in_part
         .iter()
-        .find(|w| w.len() == 6 && **w != zero_chars && **w != six_chars)
-        .unwrap()
+        .find(|w| w.len() == 6 && **w != zero_chars && **w != six_chars)?
         .clone();
 
     // 2 is the only 5-len digit with `e`
     let two_chars = in_part
         .iter()
-        .find(|w| w.len() == 5 && w.contains(&e_char))
-        .unwrap()
+        .find(|w| w.len() == 5 && w.contains(&e_char))?
         .clone();
 
     // 3 is the only 5-len digit with `c`, that is not 2
     let three_chars = in_part
         .iter()
-        .find(|w| w.len() == 5 && **w != two_chars && w.contains(&c_char))
-        .unwrap()
+        .find(|w| w.len() == 5 && **w != two_chars && w.contains(&c_char))?
         .clone();
 
     // 5 is the only remaining 5-len digit
     let five_chars = in_part
         .iter()
-        .find(|w| w.len() == 5 && **w != two_chars && **w != three_chars)
-        .unwrap()
+        .find(|w| w.len() == 5 && **w != two_chars && **w != three_chars)?
         .clone();
 
-    [
+    Some([
         zero_chars,
         one_chars,
         two_chars,
@@ -157,18 +149,21 @@ fn decipher(in_part: &InputPart) -> [HashSet<char>; 10] {
         seven_chars,
         eight_chars,
         nine_chars,
-    ]
+    ])
 }
 
-fn decode_out(out_part: &InputPart, cipher: &[HashSet<char>; 10]) -> u32 {
+fn decode_out(out_part: &InputPart, cipher: &[HashSet<char>; 10]) -> Result<u32, Box<dyn Error>> {
     let mut digits = vec![];
 
     for out_w in out_part {
-        let digit = cipher.iter().position(|w| w == out_w).unwrap();
+        let digit = cipher
+            .iter()
+            .position(|w| w == out_w)
+            .ok_or("no matching digit in cipher")?;
         digits.push(digit.to_string());
     }
 
-    digits.join("").parse::<u32>().unwrap()
+    digits.join("").parse::<u32>().map_err(|e| e.into())
 }
 
 #[cfg(test)]
@@ -198,7 +193,7 @@ mod tests {
             .map(|x| x.chars().collect::<HashSet<_>>())
             .collect::<Vec<_>>();
 
-        let cipher = decipher(&in_part);
+        let cipher = decipher(&in_part).unwrap();
 
         let [zero, one, two, three, four, five, six, seven, eight, nine] = &cipher;
         assert_eq!(zero, &"cagedb".chars().collect());
@@ -215,12 +210,12 @@ mod tests {
         let t = "cdfeb".chars().collect::<HashSet<_>>();
         assert_eq!(cipher.iter().position(|w| *w == t).unwrap(), 5);
 
-        assert_eq!(decode_out(&out_part, &cipher), 5353);
+        assert_eq!(decode_out(&out_part, &cipher).unwrap(), 5353);
 
         let test_input = parse("../d08_test_input").unwrap();
-        assert_eq!(p2(&test_input), 61229);
+        assert_eq!(p2(&test_input).unwrap(), 61229);
 
         let input = parse("../d08_input").unwrap();
-        assert_eq!(p2(&input), 1011785);
+        assert_eq!(p2(&input).unwrap(), 1011785);
     }
 }
