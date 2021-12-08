@@ -6,10 +6,10 @@ min_cost(input; cost_fun = cost) = [
     for pos = minimum(input):maximum(input)
 ] |> minimum
 
-function cost2(input, pos)::Int64
+function cost2(input, pos)
     steps = abs.(input .- pos)
-    costs = @. steps * (steps + 1) / 2
-    floor(sum(costs))
+    costs = @. steps * (steps + 1) ÷ 2
+    sum(costs)
 end
 
 test_input = [16, 1, 2, 0, 4, 2, 7, 1, 2, 14]
