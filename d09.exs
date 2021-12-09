@@ -43,10 +43,7 @@ defmodule D09 do
   end
 
   def low_points(%__MODULE__{} = m) do
-    for x <- 0..m.max_x,
-        y <- 0..m.max_y,
-        low_point?(m, x, y),
-        do: {x, y}
+    for x <- 0..m.max_x, y <- 0..m.max_y, low_point?(m, x, y), do: {x, y}
   end
 
   def basin_sizes(%__MODULE__{} = m) do
