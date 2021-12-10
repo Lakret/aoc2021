@@ -35,8 +35,6 @@ def find_mismatch(test_line):
 
 
 def complete_score(line):
-    # autocomplete sequence is found here -
-    # it's just a reverse of the unmatched chars remaining in the stack
     (_, stack) = find_mismatch(line)
     stack.reverse()
 
