@@ -10,7 +10,7 @@ fn main() {
 
 type Path = Vec<usize>;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct G {
     pub edges: HashMap<usize, Vec<usize>>,
     pub vertices: Vec<String>,
@@ -88,17 +88,17 @@ where
                 for w in adjacent.iter() {
                     if *w == end_id {
                         for mut path in paths_ending_with_v.iter().cloned() {
-                            path.push(w.clone());
+                            path.push(*w);
                             paths.push(path);
                         }
                     } else if *w != start_id {
                         let mut found_new_paths = false;
-                        let paths_ending_with_w = vertex_to_paths.entry(w.clone()).or_default();
+                        let paths_ending_with_w = vertex_to_paths.entry(*w).or_default();
 
                         for partial_path in paths_ending_with_v.iter() {
                             if is_extension_valid(g, &partial_path, w) {
                                 let mut partial_path = partial_path.clone();
-                                partial_path.push(w.clone());
+                                partial_path.push(*w);
 
                                 paths_ending_with_w.push(partial_path);
                                 found_new_paths = true;
@@ -106,7 +106,7 @@ where
                         }
 
                         if found_new_paths {
-                            stack.push(w.clone());
+                            stack.push(*w);
                         }
                     }
                 }
