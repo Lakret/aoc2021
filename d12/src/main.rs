@@ -5,7 +5,12 @@ type G = HashMap<String, Vec<String>>;
 type Path = Vec<String>;
 
 fn main() {
-    println!("Hello, world!");
+    let g = parse(&fs::read_to_string("d12_input").unwrap());
+    let p1_ans = dfs(&g).len();
+    println!("p1 = {}", p1_ans);
+
+    let p2_ans = dfs2(&g).len();
+    println!("p1 = {}", p2_ans);
 }
 
 fn parse(input: &str) -> G {
