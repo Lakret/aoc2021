@@ -46,9 +46,8 @@ fn dfs(g: &G) -> Vec<Path> {
                         let mut found_new_paths = false;
                         let paths_ending_with_w = vertex_to_paths.entry(w.to_string()).or_default();
 
-                        for partial_path in paths_ending_with_v.iter() {
+                        for mut partial_path in paths_ending_with_v.iter().cloned() {
                             if !(is_visit_once_vertex(&w) && partial_path.contains(&w)) {
-                                let mut partial_path = partial_path.clone();
                                 partial_path.push(w.clone());
 
                                 paths_ending_with_w.push(partial_path);
