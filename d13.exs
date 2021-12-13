@@ -34,22 +34,22 @@ defmodule D13 do
 
   def do_fold(coords, {"y", val}) do
     Enum.map(coords, fn
-      {x, y} when y <= val ->
-        {x, y}
-
       {x, y} when y > val ->
         {x, 2 * val - y}
+
+      {x, y} ->
+        {x, y}
     end)
     |> Enum.uniq()
   end
 
   def do_fold(coords, {"x", val}) do
     Enum.map(coords, fn
-      {x, y} when x <= val ->
-        {x, y}
-
       {x, y} when x > val ->
         {2 * val - x, y}
+
+      {x, y} ->
+        {x, y}
     end)
     |> Enum.uniq()
   end
