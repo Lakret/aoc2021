@@ -20,5 +20,6 @@ To that end, the following deps have been used:
 DataStructures # in d15, for PriorityQueue
 Pipe # all days
 Plots # d11, for visualization
+ProfileView
 StatsBase # d03, for mode function
 ```
