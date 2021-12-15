@@ -1,14 +1,14 @@
 using Pipe
 using DataStructures
 
-parse_input(input) =
-    @pipe input |> chomp |> split(_, "\n") |> map(collect, _) |> hcat(_...) |> permutedims |> parse.(Int32, _)
+parse_input(input)::Matrix{UInt16} =
+    @pipe input |> chomp |> split(_, "\n") |> map(collect, _) |> hcat(_...) |> permutedims |> parse.(UInt16, _)
 
-function dijkstra(graph::Matrix)
+function dijkstra(graph::Matrix{UInt16})
     target = maximum(keys(graph))
     current = CartesianIndex(1, 1)
     distances = Dict(current => graph[current])
-    didx = map(CartesianIndex, [(-1, 0), (0, -1), (1, 0), (0, 1)])
+    didx = CartesianIndex.([(-1, 0), (0, -1), (1, 0), (0, 1)])
 
     unvisited = PriorityQueue()
     for idx in keys(graph)
@@ -17,21 +17,21 @@ function dijkstra(graph::Matrix)
 
     while true
         for idx in didx
-            considered = current + idx
+            next = current + idx
 
-            if considered ∈ keys(graph) && considered != current && considered ∈ keys(unvisited)
-                new_distance = distances[current] + graph[considered]
+            if next ∈ keys(graph) && next != current && next ∈ keys(unvisited)
+                new_distance = distances[current] + graph[next]
 
-                if considered == target
+                if next == target
                     return new_distance - distances[CartesianIndex(1, 1)]
                 else
-                    if considered ∈ keys(distances)
-                        distances[considered] = min(distances[considered], new_distance)
+                    if next ∈ keys(distances)
+                        distances[next] = min(distances[next], new_distance)
                     else
-                        distances[considered] = new_distance
+                        distances[next] = new_distance
                     end
 
-                    unvisited[considered] = distances[considered]
+                    unvisited[next] = distances[next]
                 end
             end
         end
@@ -41,7 +41,7 @@ function dijkstra(graph::Matrix)
 end
 
 
-function enlarge(graph::Matrix)
+function enlarge(graph::Matrix{UInt16})::Matrix{UInt16}
     rows = []
     for drow = 1:5
         row = []
@@ -74,10 +74,11 @@ test_input = """
 2311944581
 """
 
+test_graph = parse_input(test_input)
+
 input = read("d15_input", String);
 graph = parse_input(input)
 
-test_graph = parse_input(test_input)
 @assert dijkstra(test_graph) == 40
 
 p1_ans = dijkstra(graph)
