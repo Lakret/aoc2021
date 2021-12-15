@@ -7,17 +7,19 @@ parse_input(input) =
 function dijkstra(graph::Matrix)
     target = maximum(keys(graph))
     current = CartesianIndex(1, 1)
-    unvisited = Set(keys(graph))
     distances = Dict(current => graph[current])
     didx = map(CartesianIndex, [(-1, 0), (0, -1), (1, 0), (0, 1)])
 
-    while true
-        delete!(unvisited, current)
+    unvisited = PriorityQueue()
+    for idx in keys(graph)
+        unvisited[idx] = Inf
+    end
 
+    while true
         for idx in didx
             considered = current + idx
 
-            if considered ∈ keys(graph) && considered != current && considered ∈ unvisited
+            if considered ∈ keys(graph) && considered != current && considered ∈ keys(unvisited)
                 new_distance = distances[current] + graph[considered]
 
                 if considered == target
@@ -29,24 +31,35 @@ function dijkstra(graph::Matrix)
                         distances[considered] = new_distance
                     end
 
+                    unvisited[considered] = distances[considered]
                 end
             end
         end
 
-        unvisited_distances = copy(distances)
-        for k in keys(unvisited_distances)
-            if k ∉ unvisited
-                delete!(unvisited_distances, k)
-            end
-        end
-
-        current = argmin(unvisited_distances)
+        current = dequeue!(unvisited)
     end
 end
 
+
 function enlarge(graph::Matrix)
-    graph
+    rows = []
+    for drow = 1:5
+        row = []
+        for dcol = 1:5
+            tile = (graph .- 1 .+ (drow - 1) .+ (dcol - 1)) .% 9 .+ 1
+            tile[tile.==0] .= 1
+
+            push!(row, tile)
+        end
+
+        row = hcat(row...)
+        push!(rows, row)
+    end
+
+    return vcat(rows...)
 end
+
+
 
 test_input = """
 1163751742
@@ -64,8 +77,9 @@ test_input = """
 test_graph = parse_input(test_input)
 @assert dijkstra(test_graph) == 40
 
-input = read("d15_input", String)
+input = read("d15_input", String);
 graph = parse_input(input)
 @assert dijkstra(graph) == 685
 
-# TODO: p2
+@assert dijkstra(enlarge(test_graph)) == 315
+@assert dijkstra(enlarge(graph)) == 2995
