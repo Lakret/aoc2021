@@ -19,7 +19,7 @@ function dijkstra(graph::Matrix{UInt16})
         for idx in didx
             next = current + idx
 
-            if next ∈ keys(graph) && next != current && next ∈ keys(unvisited)
+            if next ∈ keys(graph) && next ∈ keys(unvisited)
                 new_distance = distances[current] + graph[next]
 
                 if next == target
