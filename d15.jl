@@ -25,12 +25,7 @@ function dijkstra(graph::Matrix{UInt16})
                 if next == target
                     return new_distance - distances[CartesianIndex(1, 1)]
                 else
-                    if next ∈ keys(distances)
-                        distances[next] = min(distances[next], new_distance)
-                    else
-                        distances[next] = new_distance
-                    end
-
+                    distances[next] = min(get(distances, next, Inf), new_distance)
                     unvisited[next] = distances[next]
                 end
             end
@@ -43,8 +38,10 @@ end
 
 function enlarge(graph::Matrix{UInt16})::Matrix{UInt16}
     rows = []
+
     for drow = 1:5
         row = []
+
         for dcol = 1:5
             tile = (graph .- 1 .+ (drow - 1) .+ (dcol - 1)) .% 9 .+ 1
             tile[tile.==0] .= 1
@@ -52,8 +49,7 @@ function enlarge(graph::Matrix{UInt16})::Matrix{UInt16}
             push!(row, tile)
         end
 
-        row = hcat(row...)
-        push!(rows, row)
+        push!(rows, hcat(row...))
     end
 
     return vcat(rows...)
