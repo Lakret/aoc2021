@@ -74,12 +74,18 @@ test_input = """
 2311944581
 """
 
+input = read("d15_input", String);
+graph = parse_input(input)
+
 test_graph = parse_input(test_input)
 @assert dijkstra(test_graph) == 40
 
-input = read("d15_input", String);
-graph = parse_input(input)
-@assert dijkstra(graph) == 685
+p1_ans = dijkstra(graph)
+@assert p1_ans == 685
+println("p1: $p1_ans")
 
 @assert dijkstra(enlarge(test_graph)) == 315
-@assert dijkstra(enlarge(graph)) == 2995
+
+p2_ans = dijkstra(enlarge(graph))
+@assert p2_ans == 2995
+println("p2: $p2_ans")
