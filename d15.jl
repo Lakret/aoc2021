@@ -7,7 +7,8 @@ parse_input(input)::Matrix{UInt16} =
 function dijkstra(graph::Matrix{UInt16})
     target = maximum(keys(graph))
     current = CartesianIndex(1, 1)
-    distances = Dict(current => graph[current])
+    distances = repeat([Inf], size(graph)...)
+    distances[current] = graph[current]
     didx = CartesianIndex.([(-1, 0), (0, -1), (1, 0), (0, 1)])
 
     unvisited = PriorityQueue()
@@ -25,7 +26,7 @@ function dijkstra(graph::Matrix{UInt16})
                 if next == target
                     return new_distance - distances[CartesianIndex(1, 1)]
                 else
-                    distances[next] = min(get(distances, next, Inf), new_distance)
+                    distances[next] = min(distances[next], new_distance)
                     unvisited[next] = distances[next]
                 end
             end
