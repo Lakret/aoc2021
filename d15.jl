@@ -7,9 +7,10 @@ parse_input(input)::Matrix{UInt16} =
 function dijkstra(graph::Matrix{UInt16})
     target = maximum(keys(graph))
     current = CartesianIndex(1, 1)
+    didx = CartesianIndex.([(-1, 0), (0, -1), (1, 0), (0, 1)])
+
     distances = repeat([Inf], size(graph)...)
     distances[current] = graph[current]
-    didx = CartesianIndex.([(-1, 0), (0, -1), (1, 0), (0, 1)])
 
     unvisited = PriorityQueue()
     for idx in keys(graph)
