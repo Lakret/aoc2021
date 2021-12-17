@@ -85,4 +85,4 @@ assert D09.p1(test_m) == 15
 assert D09.p1(m) |> IO.inspect(label: :p1) == 522
 
 assert D09.p2(test_m) == 1134
-assert D09.p2(m) |> IO.inspect(label: :p1) == 916_688
+assert D09.p2(m) |> IO.inspect(label: :p2) == 916_688
