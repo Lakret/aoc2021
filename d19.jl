@@ -19,19 +19,31 @@ function parse_input(input)::Dict{Int32,Matrix{Int32}}
     Dict(reports)
 end
 
-# how to figure basis / positions for scanners? or translation between basises?
 
 function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})
-    matches = []
+    same = Dict()
+
     for r1_i = 1:size(r1)[1], r1_j = 1:size(r1)[1], r2_i = 1:size(r2)[1], r2_j = 1:size(r2)[1]
         if r1_i < r1_j && r2_i < r2_j
             if norm(r1[r1_i, :] - r1[r1_j, :]) == norm(r2[r2_i, :] - r2[r2_j, :])
-                push!(matches, [r1_i, r1_j, r2_i, r2_j])
+                if haskey(same, r1_i)
+                    same[r1_i] = intersect(same[r1_i], [r2_i, r2_j])
+                else
+                    same[r1_i] = [r2_i, r2_j]
+                end
+
+                if haskey(same, r1_j)
+                    same[r1_j] = intersect(same[r1_j], [r2_i, r2_j])
+                else
+                    same[r1_j] = [r2_i, r2_j]
+                end
             end
         end
     end
-    hcat(matches...) |> permutedims
+
+    same
 end
+
 
 find_matching(test_reports[0], test_reports[1])
 
@@ -55,6 +67,20 @@ end
 
 input = read("d19_input", String)
 reports = parse_input(input)
+
+small_test_input = """
+--- scanner 0 ---
+0,2
+4,1
+3,3
+
+--- scanner 1 ---
+-1,-1
+-5,0
+-2,1
+"""
+
+small_test_reports = parse_input(small_test_input)
 
 test_input = """
 --- scanner 0 ---
