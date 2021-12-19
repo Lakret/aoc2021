@@ -20,7 +20,7 @@ function parse_input(input)::Dict{Int32,Matrix{Int32}}
 end
 
 
-function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})
+function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})::Dict{Vector{Int32},Vector{Int32}}
     same = Dict()
 
     for r1_i = 1:size(r1)[1], r1_j = 1:size(r1)[1], r2_i = 1:size(r2)[1], r2_j = 1:size(r2)[1]
@@ -49,6 +49,38 @@ function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})
     Dict(entry[1] => entry[2][1] for entry in same if length(entry[2]) == 1)
 end
 
+function find_matching_scanner_coords(same::Dict{Vector{Int32},Vector{Int32}})
+    l, r = [], []
+    for entry in same
+        push!(l, entry[1])
+        push!(r, entry[2])
+    end
+
+    l = hcat(l...) |> permutedims
+    r = hcat(r...) |> permutedims
+
+    r_coords = [0 1 1; 0 2 1; 0 3 1]
+
+    # if a coordinate matches, it should be the same for all matching points
+    for ldim = 1:3, rdim = 1:3, sign in [1, -1]
+        uniques = Set(l[:, ldim] .- sign .* r[:, rdim])
+        if length(uniques) == 1
+            r_coords[ldim, :] = [pop!(uniques), rdim, sign]
+        end
+    end
+
+    r_coords
+end
+
+
+find_matching(test_reports[0], test_reports[1])
+
+same2 = find_matching(test_reports[1], test_reports[4])
+
+ori1 = find_matching_scanner_coords(same)
+ori2 = find_matching_scanner_coords(same2)
+
+
 for x in keys(test_reports), y in keys(test_reports)
     if x < y
         same = find_matching(test_reports[x], test_reports[y])
@@ -59,6 +91,9 @@ for x in keys(test_reports), y in keys(test_reports)
 end
 
 
+
+
+
 for x in keys(reports), y in keys(reports)
     if x < y
         same = find_matching(reports[x], reports[y])
@@ -67,6 +102,9 @@ for x in keys(reports), y in keys(reports)
         end
     end
 end
+
+
+find_matching(reports[5], reports[32])
 
 
 find_matching(test_reports[0], test_reports[1])
