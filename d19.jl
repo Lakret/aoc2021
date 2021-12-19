@@ -25,23 +25,47 @@ function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})
 
     for r1_i = 1:size(r1)[1], r1_j = 1:size(r1)[1], r2_i = 1:size(r2)[1], r2_j = 1:size(r2)[1]
         if r1_i < r1_j && r2_i < r2_j
-            if norm(r1[r1_i, :] - r1[r1_j, :]) == norm(r2[r2_i, :] - r2[r2_j, :])
-                if haskey(same, r1_i)
-                    same[r1_i] = intersect(same[r1_i], [r2_i, r2_j])
+            s1b1, s1b2, s2b1, s2b2 = r1[r1_i, :], r1[r1_j, :], r2[r2_i, :], r2[r2_j, :]
+            if norm(s1b1 - s1b2) == norm(s2b1 - s2b2)
+                if haskey(same, s1b1)
+                    # we can assume that if the same r1_i came up again, the beacon
+                    # it really corresponds to will be already present in the set of possibilities
+                    # for it
+                    same[s1b1] = intersect(same[s1b1], [s2b1, s2b2])
                 else
-                    same[r1_i] = [r2_i, r2_j]
+                    # we don't know if r1_i corresponds to the first or second beacon
+                    same[s1b1] = [s2b1, s2b2]
                 end
 
-                if haskey(same, r1_j)
-                    same[r1_j] = intersect(same[r1_j], [r2_i, r2_j])
+                if haskey(same, s1b2)
+                    same[s1b2] = intersect(same[s1b2], [s2b1, s2b2])
                 else
-                    same[r1_j] = [r2_i, r2_j]
+                    same[s1b2] = [s2b1, s2b2]
                 end
             end
         end
     end
 
-    same
+    Dict(entry[1] => entry[2][1] for entry in same if length(entry[2]) == 1)
+end
+
+for x in keys(test_reports), y in keys(test_reports)
+    if x < y
+        same = find_matching(test_reports[x], test_reports[y])
+        if length(same) >= 12
+            println("$x, $y => $same")
+        end
+    end
+end
+
+
+for x in keys(reports), y in keys(reports)
+    if x < y
+        same = find_matching(reports[x], reports[y])
+        if length(same) >= 12
+            println("$x, $y")
+        end
+    end
 end
 
 
