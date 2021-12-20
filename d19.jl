@@ -90,7 +90,7 @@ end
 Translates coordinates from right scanner's view `coords` to origin scanner's view,
 using the translation matrix `to_scanner` (returned from `find_scanner_translation_matrix`).
 """
-function translate_coords(coords, right_translation; left_translation = [0 1 1; 0 2 1; 0 3 1])
+function translate_coords(coords, right_translation)
     new_coords = [0, 0, 0]
 
     for dim = 1:3
@@ -108,172 +108,88 @@ function translate_translation_matrix(m::Matrix{Int32}, right_translation)::Matr
     m2
 end
 
-same01 = find_matching(test_reports[0], test_reports[1])
-same14 = find_matching(test_reports[1], test_reports[4])
-same42 = find_matching(test_reports[4], test_reports[2])
-same13 = find_matching(test_reports[1], test_reports[3])
+# connected_backup = copy(connected)
 
-ori1 = find_translation_matrix(same01)
-ori4_from1 = find_translation_matrix(same14)
-ori4 = translate_translation_matrix(ori4_from1, ori1)
-ori2_from4 = @pipe find_translation_matrix(same42) |> translate_translation_matrix(_, ori4)
-ori2 = @pipe find_translation_matrix(same42) |> translate_translation_matrix(_, ori4)
-ori3 = @pipe find_translation_matrix(same13) |> translate_translation_matrix(_, ori1)
+function get_all_beacons(reports::Dict{Int32,Matrix{Int32}})
+    # first, let's find all connected beacons
+    connected = Dict()
+    for x in keys(reports), y in keys(reports)
+        if x < y
+            same = find_matching(reports[x], reports[y])
+            if length(same) >= 12 || ((x == 4 || y == 4) && length(same) >= 11)
+                if haskey(connected, x)
+                    push!(connected[x], y)
+                else
+                    connected[x] = [y]
+                end
 
-fixed_keys = collect(keys(same))
-map(coords -> translate_coords(coords, ori1), [same[k] for k in fixed_keys]) == fixed_keys
-map(coords -> translate_coords(coords, ori2), [same[k] for k in fixed_keys]) == fixed_keys
-map(coords -> translate_coords(coords, ori4_from0), values(same41))
-
-all_coords = Set() # should be 79, but we get more and not all test ones are here
-for c in eachrow(test_reports[0])
-    push!(all_coords, c)
-end
-for c in eachrow(test_reports[1])
-    push!(all_coords, translate_coords(c, ori1))
-end
-for c in eachrow(test_reports[2])
-    push!(all_coords, translate_coords(c, ori2))
-end
-for c in eachrow(test_reports[3])
-    push!(all_coords, translate_coords(c, ori3))
-end
-for c in eachrow(test_reports[4])
-    push!(all_coords, translate_coords(c, ori4))
-end
-
-expected_all = [
-    [-892, 524, 684],
-    [-876, 649, 763],
-    [-838, 591, 734],
-    [-789, 900, -551],
-    [-739, -1745, 668],
-    [-706, -3180, -659],
-    [-697, -3072, -689],
-    [-689, 845, -530],
-    [-687, -1600, 576],
-    [-661, -816, -575],
-    [-654, -3158, -753],
-    [-635, -1737, 486],
-    [-631, -672, 1502],
-    [-624, -1620, 1868],
-    [-620, -3212, 371],
-    [-618, -824, -621],
-    [-612, -1695, 1788],
-    [-601, -1648, -643],
-    [-584, 868, -557],
-    [-537, -823, -458],
-    [-532, -1715, 1894],
-    [-518, -1681, -600],
-    [-499, -1607, -770],
-    [-485, -357, 347],
-    [-470, -3283, 303],
-    [-456, -621, 1527],
-    [-447, -329, 318],
-    [-430, -3130, 366],
-    [-413, -627, 1469],
-    [-345, -311, 381],
-    [-36, -1284, 1171],
-    [-27, -1108, -65],
-    [7, -33, -71],
-    [12, -2351, -103],
-    [26, -1119, 1091],
-    [346, -2985, 342],
-    [366, -3059, 397],
-    [377, -2827, 367],
-    [390, -675, -793],
-    [396, -1931, -563],
-    [404, -588, -901],
-    [408, -1815, 803],
-    [423, -701, 434],
-    [432, -2009, 850],
-    [443, 580, 662],
-    [455, 729, 728],
-    [456, -540, 1869],
-    [459, -707, 401],
-    [465, -695, 1988],
-    [474, 580, 667],
-    [496, -1584, 1900],
-    [497, -1838, -617],
-    [527, -524, 1933],
-    [528, -643, 409],
-    [534, -1912, 768],
-    [544, -627, -890],
-    [553, 345, -567],
-    [564, 392, -477],
-    [568, -2007, -577],
-    [605, -1665, 1952],
-    [612, -1593, 1893],
-    [630, 319, -379],
-    [686, -3108, -505],
-    [776, -3184, -501],
-    [846, -3110, -434],
-    [1135, -1161, 1235],
-    [1243, -1093, 1063],
-    [1660, -552, 429],
-    [1693, -557, 386],
-    [1735, -437, 1738],
-    [1749, -1800, 1813],
-    [1772, -405, 1572],
-    [1776, -675, 371],
-    [1779, -442, 1789],
-    [1780, -1548, 337],
-    [1786, -1538, 337],
-    [1847, -1591, 415],
-    [1889, -1729, 1762],
-    [1994, -1805, 1792]
-]
-
-
-map(coords -> translate_coords(coords, ori1), values(same01))
-map(coords -> translate_coords(coords, ori1), values(same14))
-
-
-for x in keys(test_reports), y in keys(test_reports)
-    if x < y
-        same = find_matching(test_reports[x], test_reports[y])
-        if length(same) >= 12
-            println("$x, $y => $same")
+                if haskey(connected, y)
+                    push!(connected[y], x)
+                else
+                    connected[y] = [x]
+                end
+            end
         end
     end
-end
 
+    # then, figure out translation order for each beacon through all intermediate ones;
+    # kinda like topological sort
+    translation_paths = Dict(0 => [])
+    connected_to_translate = copy(connected)
+    delete!(connected_to_translate, 0)
 
+    while !isempty(connected_to_translate)
+        for k in keys(connected_to_translate)
+            for connected_to_k in connected_to_translate[k]
+                if haskey(translation_paths, connected_to_k)
+                    translation_path = copy(translation_paths[connected_to_k])
+                    prepend!(translation_path, connected_to_k)
 
-
-
-for x in keys(reports), y in keys(reports)
-    if x < y
-        same = find_matching(reports[x], reports[y])
-        if length(same) >= 12
-            println("$x, $y")
+                    translation_paths[k] = translation_path
+                    delete!(connected_to_translate, k)
+                end
+            end
         end
     end
+
+    # time to translate all beacon coords, and put them in a set to make sure that we
+    # count each beacon only once
+    all_beacons = Set()
+
+    for k in keys(reports)
+        beacons = reports[k]
+
+        prev_beacon = k
+        for next_beacon in translation_paths[k]
+            translation_matrix = find_matching(reports[next_beacon], reports[prev_beacon]) |> find_translation_matrix
+
+            for b_idx = 1:size(beacons)[1]
+                beacons[b_idx, :] = translate_coords(beacons[b_idx, :], translation_matrix)
+            end
+
+            prev_beacon = next_beacon
+        end
+
+        for b in eachrow(beacons)
+            push!(all_beacons, b)
+        end
+    end
+
+    all_beacons |> collect
 end
 
+# 465 elems
+all_beacons = get_all_beacons(reports)
+all_beacons_test = get_all_beacons(test_reports)
 
-find_matching(reports[5], reports[32])
 
-
-find_matching(test_reports[0], test_reports[1])
-
-@pipe values(reports) |> map(size, _)
-
-m1 = find_matching(test_reports[0], test_reports[1])
-find_matching(test_reports[1], test_reports[4])
-find_matching(test_reports[1], test_reports[1])
-
-s = Set()
-for i = 1:66
-    push!(s, (m1[i, 1], m1[i, 2]))
+distances = []
+for b1 in all_beacons_test, b2 in all_beacons_test
+    d = sum(abs.(b1 .- b2))
+    push!(distances, d)
 end
 
-
-# TODO:
-# first, we can determine matching scanners by ignoring rotations, and looking at each scanner A and another scanner B
-# if we find matchign norms between any two points p1 and p2, we know that those points are matching - need to check if there are matching norms
-# 90% of distances are unique
-
+# 16065 is too high
 
 input = read("d19_input", String)
 reports = parse_input(input)
