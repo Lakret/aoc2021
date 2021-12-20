@@ -15,6 +15,8 @@ assert back_up[1] == []  # zipper is empty
 assert back_up[0] == t  # tree is fully reconstructed
 move_up(back_up)
 
+# expand_focused(first_expand_node)
+
 
 def expand_focused(zipper):
     current = deepcopy(zipper)
