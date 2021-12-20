@@ -19,7 +19,13 @@ function parse_input(input)::Dict{Int32,Matrix{Int32}}
     Dict(reports)
 end
 
+"""
+Finds matching beacon coordinates, using length between beacons (coordinate system independent)
+to find matches.
 
+Returns a dictonary of matching coordinates with keys as the left scanner's perspective coords,
+and values as the right scanner's perspective coords.
+"""
 function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})::Dict{Vector{Int32},Vector{Int32}}
     same = Dict()
 
@@ -49,7 +55,14 @@ function find_matching(r1::Matrix{Int32}, r2::Matrix{Int32})::Dict{Vector{Int32}
     Dict(entry[1] => entry[2][1] for entry in same if length(entry[2]) == 1)
 end
 
-function find_matching_scanner_coords(same::Dict{Vector{Int32},Vector{Int32}})
+"""
+Returns right scanner coords according to the left scanner's perspective,
+as a matrix of `[offset rdim sign]`.
+
+`same` should be a dictionary of matching coordinates with left scanner's perspective
+as keys, and right scanner's perspective as values.
+"""
+function find_scanner_translation_matrix(same::Dict{Vector{Int32},Vector{Int32}})::Matrix{Int32}
     l, r = [], []
     for entry in same
         push!(l, entry[1])
@@ -63,6 +76,7 @@ function find_matching_scanner_coords(same::Dict{Vector{Int32},Vector{Int32}})
 
     # if a coordinate matches, it should be the same for all matching points
     for ldim = 1:3, rdim = 1:3, sign in [1, -1]
+        #
         uniques = Set(l[:, ldim] .- sign .* r[:, rdim])
         if length(uniques) == 1
             r_coords[ldim, :] = [pop!(uniques), rdim, sign]
@@ -72,13 +86,32 @@ function find_matching_scanner_coords(same::Dict{Vector{Int32},Vector{Int32}})
     r_coords
 end
 
+"""
+Translates coordinates from right scanner's view `coords` to origin scanner's view,
+using the translation matrix `to_scanner` (returned from `find_scanner_translation_matrix`).
+"""
+function translate_coords(coords::Vector{Int}, right_translation; left_translation = [0 1 1; 0 2 1; 0 3 1])
+    new_coords = [0, 0, 0]
 
-find_matching(test_reports[0], test_reports[1])
+    for dim = 1:3
+        offset, rdim, sign = right_translation[dim, 1], right_translation[dim, 2], right_translation[dim, 3]
+        new_coords[dim] = sign * coords[rdim] + offset
+    end
 
-same2 = find_matching(test_reports[1], test_reports[4])
+    new_coords
+end
 
-ori1 = find_matching_scanner_coords(same)
-ori2 = find_matching_scanner_coords(same2)
+same01 = find_matching(test_reports[0], test_reports[1])
+same41 = find_matching(test_reports[1], test_reports[4])
+
+ori1 = find_matching_scanner_coords(same01)
+ori4_from1 = find_matching_scanner_coords(same41)
+ori4_from0 = translate_coords(ori4[:, 1], ori1)
+
+fixed_keys = collect(keys(same))
+map(coords -> translate_coords(coords, ori1), [same[k] for k in fixed_keys]) == fixed_keys
+map(coords -> translate_coords(coords, ori2), [same[k] for k in fixed_keys]) == fixed_keys
+
 
 
 for x in keys(test_reports), y in keys(test_reports)
