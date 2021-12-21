@@ -52,7 +52,7 @@ impl Image {
             non_missing_as = self.missing_as ^ 0;
         }
 
-        let margin = 10;
+        let margin = 3;
         for y in (self.min_y - margin)..(self.max_y + margin + 1) {
             for x in (self.min_x - margin)..(self.max_x + margin + 1) {
                 let new_pixel = self.algo[self.get_pixel_code(x, y)];
