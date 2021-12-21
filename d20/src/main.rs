@@ -3,6 +3,7 @@ use std::fs;
 
 // 1:08 start
 // 2:00 p1
+// 2:07 p2
 
 fn main() {
     println!("Hello, world!");
@@ -22,6 +23,16 @@ pub struct Image {
 const OFFSET: [i64; 3] = [-1, 0, 1];
 
 impl Image {
+    pub fn enhance_times(&self, times: u32) -> Image {
+        let mut new_image = self.clone();
+
+        for _ in 0..times {
+            new_image = new_image.enhance();
+        }
+
+        new_image
+    }
+
     pub fn enhance(&self) -> Image {
         let mut new_image = self.clone();
         new_image.canvas.clear();
@@ -162,26 +173,36 @@ mod tests {
     #[test]
     fn p1_test() {
         let test_input = fs::read_to_string("../d20_test_input").unwrap();
-        let image = Image::parse(test_input);
-        assert_eq!(image.canvas.len(), 10);
-        assert_eq!(image.algo[0..5], [0, 0, 1, 0, 1]);
+        let test_image = Image::parse(test_input);
+        assert_eq!(test_image.canvas.len(), 10);
+        assert_eq!(test_image.algo[0..5], [0, 0, 1, 0, 1]);
 
-        assert_eq!(image.get_pixel_code(2, 2), 34);
+        assert_eq!(test_image.get_pixel_code(2, 2), 34);
 
-        let enhanced = image.enhance();
+        let enhanced = test_image.enhance();
         let enhanced2 = enhanced.enhance();
         assert_eq!(enhanced2.canvas.len(), 35);
 
-        let test_input = fs::read_to_string("../d20_input").unwrap();
-        let image = Image::parse(test_input);
-        image.draw();
+        let input = fs::read_to_string("../d20_input").unwrap();
+        let image = Image::parse(input);
 
         let enhanced = image.enhance();
-        enhanced.draw();
-
         let enhanced2 = enhanced.enhance();
-        enhanced2.draw();
-
         assert_eq!(enhanced2.canvas.len(), 5268);
+    }
+
+    #[test]
+    fn p2_test() {
+        let test_input = fs::read_to_string("../d20_test_input").unwrap();
+        let test_image = Image::parse(test_input);
+
+        let test_image_enhanced = test_image.enhance_times(50);
+        assert_eq!(test_image_enhanced.canvas.len(), 3351);
+
+        let test_input = fs::read_to_string("../d20_input").unwrap();
+        let image = Image::parse(test_input);
+        let image_enhanced = image.enhance_times(50);
+        image_enhanced.draw();
+        assert_eq!(image_enhanced.canvas.len(), 3351);
     }
 }
