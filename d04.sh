@@ -1,1 +1,1 @@
-cargo build --release && ./target/release/d04
+cargo run --bin d04 --release

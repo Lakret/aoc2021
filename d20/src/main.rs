@@ -173,7 +173,6 @@ impl Image {
     }
 }
 
-// run with `cargo test --bin d20 -- --nocapture`
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,1 +1,1 @@
-cargo build --release && ./target/release/d12
+cargo run --bin d12 --release
