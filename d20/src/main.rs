@@ -1,12 +1,21 @@
 use std::collections::HashSet;
 use std::fs;
 
-// 1:08 start
-// 2:00 p1
-// 2:07 p2
-
 fn main() {
-    println!("Hello, world!");
+    let input = fs::read_to_string("d20_input").unwrap();
+    let image = Image::parse(input);
+
+    let p1_ans = image.enhance_times(2).canvas.len();
+    assert_eq!(p1_ans, 5268);
+    println!("p1: {}", p1_ans);
+
+    let image_enhanced = image.enhance_times(50);
+
+    let p2_ans = image_enhanced.canvas.len();
+    assert_eq!(p2_ans, 16875);
+    println!("p2: {}", p2_ans);
+
+    image_enhanced.draw();
 }
 
 #[derive(Debug, Clone)]
@@ -182,13 +191,6 @@ mod tests {
         let enhanced = test_image.enhance();
         let enhanced2 = enhanced.enhance();
         assert_eq!(enhanced2.canvas.len(), 35);
-
-        let input = fs::read_to_string("../d20_input").unwrap();
-        let image = Image::parse(input);
-
-        let enhanced = image.enhance();
-        let enhanced2 = enhanced.enhance();
-        assert_eq!(enhanced2.canvas.len(), 5268);
     }
 
     #[test]
@@ -199,10 +201,9 @@ mod tests {
         let test_image_enhanced = test_image.enhance_times(50);
         assert_eq!(test_image_enhanced.canvas.len(), 3351);
 
-        let test_input = fs::read_to_string("../d20_input").unwrap();
-        let image = Image::parse(test_input);
+        let input = fs::read_to_string("../d20_input").unwrap();
+        let image = Image::parse(input);
         let image_enhanced = image.enhance_times(50);
-        image_enhanced.draw();
-        assert_eq!(image_enhanced.canvas.len(), 3351);
+        assert_eq!(image_enhanced.canvas.len(), 16875);
     }
 }
