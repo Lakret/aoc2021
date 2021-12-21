@@ -199,10 +199,5 @@ mod tests {
 
         let test_image_enhanced = test_image.enhance_times(50);
         assert_eq!(test_image_enhanced.canvas.len(), 3351);
-
-        let input = fs::read_to_string("../d20_input").unwrap();
-        let image = Image::parse(input);
-        let image_enhanced = image.enhance_times(50);
-        assert_eq!(image_enhanced.canvas.len(), 16875);
     }
 }
