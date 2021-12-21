@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::fs;
 
 // 1:08 start
+// 2:00 p1
 
 fn main() {
     println!("Hello, world!");
@@ -25,12 +26,18 @@ impl Image {
         let mut new_image = self.clone();
         new_image.canvas.clear();
 
-        let margin = 4;
+        let mut non_missing_as = 1;
+        if self.algo[0] == 1 {
+            new_image.missing_as = self.missing_as ^ 1;
+            non_missing_as = self.missing_as ^ 0;
+        }
+
+        let margin = 10;
         for y in (self.min_y - margin)..(self.max_y + margin + 1) {
             for x in (self.min_x - margin)..(self.max_x + margin + 1) {
                 let new_pixel = self.algo[self.get_pixel_code(x, y)];
 
-                if new_pixel == 1 {
+                if new_pixel == non_missing_as {
                     new_image.canvas.insert((x, y));
 
                     if x < new_image.min_x {
@@ -58,9 +65,17 @@ impl Image {
         for y in self.min_y..self.max_y + 1 {
             for x in self.min_x..self.max_x + 1 {
                 if self.canvas.contains(&(x, y)) {
-                    print!("#");
+                    if self.missing_as == 0 {
+                        print!("#");
+                    } else {
+                        print!(".");
+                    }
                 } else {
-                    print!(".");
+                    if self.missing_as == 0 {
+                        print!(".");
+                    } else {
+                        print!("#");
+                    }
                 }
             }
             println!();
@@ -138,6 +153,7 @@ impl Image {
     }
 }
 
+// run with `cargo test --bin d20 -- --nocapture`
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,6 +168,12 @@ mod tests {
 
         assert_eq!(image.get_pixel_code(2, 2), 34);
 
+        let enhanced = image.enhance();
+        let enhanced2 = enhanced.enhance();
+        assert_eq!(enhanced2.canvas.len(), 35);
+
+        let test_input = fs::read_to_string("../d20_input").unwrap();
+        let image = Image::parse(test_input);
         image.draw();
 
         let enhanced = image.enhance();
@@ -159,5 +181,7 @@ mod tests {
 
         let enhanced2 = enhanced.enhance();
         enhanced2.draw();
+
+        assert_eq!(enhanced2.canvas.len(), 5268);
     }
 }
