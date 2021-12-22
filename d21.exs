@@ -57,10 +57,10 @@ defmodule D21 do
       player: :player1,
       # {score, pos} => outcomes_count
       player1: %{
-        {0, player1_pos} => 0
+        {0, player1_pos} => 1
       },
       player2: %{
-        {0, player2_pos} => 0
+        {0, player2_pos} => 1
       },
       wins: %{
         player1: 0,
@@ -94,7 +94,7 @@ defmodule D21 do
             fn {{score, pos}, prev_outcomes}, player_state ->
               new_pos = rem(pos + steps - 1, 10) + 1
               new_score = score + new_pos
-              new_outcomes = prev_outcomes + outcomes
+              new_outcomes = prev_outcomes * outcomes
 
               Map.update(
                 player_state,
@@ -115,7 +115,7 @@ defmodule D21 do
     {active_player_states, wins} =
       Enum.reduce(
         active_player_states,
-        {%{}, 0},
+        {%{}, state.wins[state.player]},
         fn
           {{score, _pos}, outcomes}, {states, wins} when score >= 21 ->
             {states, wins + outcomes}
