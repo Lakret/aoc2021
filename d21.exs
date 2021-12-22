@@ -55,7 +55,6 @@ defmodule D21 do
 
     state = %{
       player: :player1,
-      # {score, pos} => outcomes_count
       player1: %{
         {0, player1_pos} => 1
       },
@@ -100,7 +99,9 @@ defmodule D21 do
                 player_state,
                 {new_score, new_pos},
                 new_outcomes,
-                fn another_branch_outcomes -> new_outcomes + another_branch_outcomes end
+                fn another_branch_outcomes ->
+                  (new_outcomes + another_branch_outcomes) |> IO.inspect(label: :yo)
+                end
               )
             end
           )
@@ -121,7 +122,7 @@ defmodule D21 do
             {states, wins + outcomes}
 
           {score_and_pos, outcomes}, {states, wins} ->
-            {Map.put(states, score_and_pos, outcomes), wins}
+            {Map.put_new(states, score_and_pos, outcomes), wins}
         end
       )
 
