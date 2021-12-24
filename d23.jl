@@ -78,6 +78,10 @@ end
 function possible_moves(state)
     moves = []
 
+    if state == target
+        return []
+    end
+
     corridor_free_ids = findall(ismissing, state["corridor"])
     # idx is room_id, tuple is (corridor_cell_id before room, corridor_cell_id after rooms)
     room_id_to_prev_and_next_corridor_cell_id = [(2, 3), (3, 4), (4, 5), (5, 6)]
@@ -154,8 +158,9 @@ function solve(state)
     expected_costs = PriorityQueue()
     expected_costs[state] = heuristic_goal_distance(state)
 
-    while !isempty(discovered)
-        current = dequeue!(expected_costs)
+    while !isempty(discovered) # && !isempty(expected_costs)
+        current = peek(expected_costs)[1]
+        delete!(discovered, current)
 
         if current == target
             return known_costs[current], expected_costs[current]
@@ -173,6 +178,10 @@ function solve(state)
                 end
             end
         end
+    end
+
+    for k in first(keys(known_costs), 10)
+        println("known = $(known_costs[k]), expected = $(expected_costs[k])")
     end
 end
 
