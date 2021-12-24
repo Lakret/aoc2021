@@ -124,6 +124,57 @@ function possible_moves(state)
     moves
 end
 
+function heuristic_goal_distance(state)
+    expected_cost = 0
+
+    if !any(ismissing, state["rooms"]) && state["rooms"] == target
+        return expected_cost
+    end
+
+    # all amphipods from the corridor will need to move to the rooms, doing at least 2 steps
+    expected_cost += sum([2 * atype_to_step_cost[atype] for atype in skipmissing(state["corridor"])], init = 0)
+
+    # and all amphipods not in their rooms will need to move to the corridor and then to their rooms
+    for idx in eachindex(target)
+        actual_atype = state["rooms"][idx]
+
+        if !ismissing(actual_atype) && actual_atype != target[idx]
+            expected_cost += 4 * atype_to_step_cost[actual_atype]
+        end
+    end
+
+    expected_cost
+end
+
+function solve(state)
+    discovered = Set([state])
+
+    known_costs = Dict(state => 0)
+
+    expected_costs = PriorityQueue()
+    expected_costs[state] = heuristic_goal_distance(state)
+
+    while !isempty(discovered)
+        current = dequeue!(expected_costs)
+
+        if current == target
+            return known_costs[current], expected_costs[current]
+        end
+
+        for move in possible_moves(current)
+            (move_cost, after_move_state) = do_move(current, move)
+            new_known_cost = known_costs[current] + move_cost
+            if !haskey(known_costs, after_move_state) || new_known_cost < known_costs[after_move_state]
+                known_costs[after_move_state] = new_known_cost
+                expected_costs[after_move_state] = new_known_cost + heuristic_goal_distance(after_move_state)
+
+                if after_move_state ∉ discovered
+                    push!(discovered, after_move_state)
+                end
+            end
+        end
+    end
+end
 
 
 # rooms matrix:
@@ -165,3 +216,6 @@ test_moves = [
 @assert test_cost == 12521
 @assert test_final_state["rooms"] == target
 @assert all(ismissing, test_final_state["corridor"])
+
+
+println(solve(test_input))
