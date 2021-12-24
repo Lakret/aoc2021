@@ -150,6 +150,14 @@ function heuristic_goal_distance(state)
     expected_cost
 end
 
+# TODO: prune situations like this one
+# #12.3.4.5.67# - corridor_cell_id
+# #.B.C.A.....#
+# ###A#B#C#D### - room_id
+function target_reachable(state)
+    true
+end
+
 function solve(state)
     discovered = Set([state])
 
@@ -158,7 +166,7 @@ function solve(state)
     expected_costs = PriorityQueue()
     expected_costs[state] = heuristic_goal_distance(state)
 
-    while !isempty(discovered) # && !isempty(expected_costs)
+    while !isempty(discovered)
         current = peek(expected_costs)[1]
         delete!(discovered, current)
 
@@ -168,12 +176,13 @@ function solve(state)
 
         for move in possible_moves(current)
             (move_cost, after_move_state) = do_move(current, move)
-            new_known_cost = known_costs[current] + move_cost
-            if !haskey(known_costs, after_move_state) || new_known_cost < known_costs[after_move_state]
-                known_costs[after_move_state] = new_known_cost
-                expected_costs[after_move_state] = new_known_cost + heuristic_goal_distance(after_move_state)
 
-                if after_move_state ∉ discovered
+            if target_reachable(after_move_state)
+                new_known_cost = known_costs[current] + move_cost
+                if !haskey(known_costs, after_move_state) || new_known_cost < known_costs[after_move_state]
+                    known_costs[after_move_state] = new_known_cost
+                    expected_costs[after_move_state] = new_known_cost + heuristic_goal_distance(after_move_state)
+
                     push!(discovered, after_move_state)
                 end
             end
@@ -228,3 +237,5 @@ test_moves = [
 
 
 println(solve(test_input))
+
+# TODO: is there more than one way to solve it, actually?
