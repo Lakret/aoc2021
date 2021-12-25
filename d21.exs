@@ -44,6 +44,73 @@ defmodule D21 do
     }
   end
 
+  # def p2_2(player1_pos, player2_pos) do
+  #   steps_to_outcomes_count =
+  #     Enum.group_by(
+  #       for(r1 <- 1..3, r2 <- 1..3, r3 <- 1..3, do: r1 + r2 + r3),
+  #       fn x -> x end
+  #     )
+  #     |> Enum.map(fn {k, v} -> {k, length(v)} end)
+  #     |> Enum.into(%{})
+
+  #   player1_states = %{{0, player1_pos} => 1}
+  #   player2_states = %{{0, player2_pos} => 1}
+  #   player1_wins = 0
+  #   player2_wins = 0
+
+  #   simulate(
+  #     :player1,
+  #     player1_states,
+  #     player1_wins,
+  #     player2_states,
+  #     player2_wins,
+  #     steps_to_outcomes_count
+  #   )
+  # end
+
+  # def simulate(
+  #       :player1,
+  #       player1_states,
+  #       player1_wins,
+  #       player2_states,
+  #       player2_wins,
+  #       steps_to_outcomes_count
+  #     ) do
+  #   Enum.reduce(steps_to_outcomes_count, {player1_states, player1_wins, player2_states, player2_wins}, fn {steps, outcomes_count}, acc ->
+  #     {player1_states, player1_wins} =
+  #       Enum.reduce(
+  #         player1_states,
+  #         {%{}, player1_wins},
+  #         fn {{player1_score, player1_pos}, player1_state_count},
+  #            {player1_states, player1_wins} ->
+  #           new_pos = rem(player1_pos + steps - 1, 10) + 1
+  #           new_score = player1_score + new_pos
+  #           new_state_count = player1_state_count * outcomes_count
+
+  #           if new_score >= 21 do
+  #             {player1_states, player1_wins + new_state_count}
+  #           else
+  #             player1_states = Map.put(player1_states, {new_score, new_pos}, new_state_count)
+  #             {player2_states, player1_wins}
+  #           end
+  #         end
+  #       )
+
+  #     simulate(:player2, player1_states, player1_wins, player2_states, player2_wins, steps_to_outcomes_count)
+  #   end)
+  # end
+
+  # def simulate(
+  #       :player2,
+  #       player1_states,
+  #       player2_states,
+  #       player1_wins,
+  #       player2_wins,
+  #       steps_to_outcomes_count
+  #     ) do
+  #   # TODO:
+  # end
+
   def p2(player1_pos, player2_pos) do
     all_possible_roll_sums = for r1 <- 1..3, r2 <- 1..3, r3 <- 1..3, do: r1 + r2 + r3
 

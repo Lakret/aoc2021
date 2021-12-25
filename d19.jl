@@ -112,6 +112,7 @@ function get_all_beacons_and_scanners(reports::Dict{Int32,Matrix{Int32}})
     for x in keys(reports), y in keys(reports)
         if x < y
             same = find_matching(reports[x], reports[y])
+
             if length(same) >= 12 || ((x == 4 || y == 4) && length(same) >= 11)
                 if haskey(connected, x)
                     push!(connected[x], y)
@@ -183,6 +184,7 @@ function get_all_beacons_and_scanners(reports::Dict{Int32,Matrix{Int32}})
 
     collect(all_beacons), all_scanners
 end
+
 
 function p2(all_scanners)
     distances = []
