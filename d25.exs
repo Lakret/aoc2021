@@ -38,18 +38,15 @@ defmodule D25 do
 
   def show(state) do
     for y <- 0..state.max_y do
-      line =
-        for x <- 0..state.max_x, into: "" do
-          case state.map[{x, y}] do
-            nil -> "."
-            :east -> ">"
-            :south -> "v"
-          end
+      for x <- 0..state.max_x do
+        case state.map[{x, y}] do
+          nil -> "."
+          :east -> ">"
+          :south -> "v"
         end
-
-      line
+      end
     end
-    |> Enum.join("\n")
+    |> Enum.intersperse("\n")
     |> IO.puts()
   end
 
@@ -114,8 +111,6 @@ defmodule D25 do
   end
 end
 
-# c("d25.exs")
-
 import ExUnit.Assertions
 
 test_input = """
@@ -139,7 +134,7 @@ state = D25.parse(input)
 assert test_answer == 58
 
 {answer, final_state} = D25.p1(state)
-assert answer == 424
+assert answer |> IO.inspect(label: :p1) == 424
 
 D25.show(state)
 IO.puts("")

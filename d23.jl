@@ -86,7 +86,23 @@ function possible_moves(state)
     # idx is room_id, tuple is (corridor_cell_id before room, corridor_cell_id after rooms)
     room_id_to_prev_and_next_corridor_cell_id = [(2, 3), (3, 4), (4, 5), (5, 6)]
 
-    # we can either move out of a room...
+    # we can move into a room, if it's our final room and if we don't cross anybody
+    corridor_occupied_ids = findall((!) ∘ ismissing, state["corridor"])
+    for corridor_cell_id in corridor_occupied_ids
+        atype = state["corridor"][corridor_cell_id]
+        room_id = atype_to_room_id[atype]
+
+        (prev_cell_id, next_cell_id) = room_id_to_prev_and_next_corridor_cell_id[room_id]
+
+        if (corridor_cell_id ∈ [prev_cell_id, next_cell_id]) ||
+           (corridor_cell_id < prev_cell_id &&
+            isempty(skipmissing(state["corridor"][corridor_cell_id+1:prev_cell_id]))) ||
+           (isempty(skipmissing(state["corridor"][next_cell_id:corridor_cell_id-1])))
+            push!(moves, (:to_room, room_id, corridor_cell_id))
+        end
+    end
+
+    # or we can move out of a room...
     for room_id = 1:4
         # ... if there is somebody inside
         if any((!) ∘ ismissing, state["rooms"][room_id, :])
@@ -105,23 +121,6 @@ function possible_moves(state)
                     push!(moves, (:to_corridor, room_id, corridor_cell_id))
                 end
             end
-        end
-    end
-
-    # or, we can move into a room, if it's our final room,
-    # and if we don't cross anybody
-    corridor_occupied_ids = findall((!) ∘ ismissing, state["corridor"])
-    for corridor_cell_id in corridor_occupied_ids
-        atype = state["corridor"][corridor_cell_id]
-        room_id = atype_to_room_id[atype]
-
-        (prev_cell_id, next_cell_id) = room_id_to_prev_and_next_corridor_cell_id[room_id]
-
-        if (corridor_cell_id ∈ [prev_cell_id, next_cell_id]) ||
-           (corridor_cell_id < prev_cell_id &&
-            isempty(skipmissing(state["corridor"][corridor_cell_id+1:prev_cell_id]))) ||
-           (isempty(skipmissing(state["corridor"][next_cell_id:corridor_cell_id-1])))
-            push!(moves, (:to_room, room_id, corridor_cell_id))
         end
     end
 
@@ -155,7 +154,7 @@ end
 # #.B.C.A.....#
 # ###A#B#C#D### - room_id
 function target_reachable(state)
-    true
+    issorted(skipmissing(state["corridor"][3:5]))
 end
 
 function solve(state)
@@ -238,4 +237,7 @@ test_moves = [
 
 println(solve(test_input))
 
-# TODO: is there more than one way to solve it, actually?
+# TODO: we also need to make sure that correctly placed amphipods stay where they are
+# after at most 1 move
+# TODO: we can search in reverse, from target to the given state
+# TODO: Hanoi towers?
