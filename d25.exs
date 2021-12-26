@@ -13,36 +13,37 @@ defmodule D25 do
   end
 
   def parse(input) do
-    map =
+    {east, south} =
       input
       |> String.split("\n", trim: true)
       |> Enum.with_index()
-      |> Enum.reduce(%{}, fn {line, y}, map ->
-        String.graphemes(line)
+      |> Enum.reduce({MapSet.new(), MapSet.new()}, fn {line, y}, maps ->
+        line
+        |> String.graphemes()
         |> Enum.with_index()
-        |> Enum.reduce(map, fn {cell, x}, map ->
+        |> Enum.reduce(maps, fn {cell, x}, {east, south} ->
           case cell do
-            ">" -> Map.put(map, {x, y}, :east)
-            "v" -> Map.put(map, {x, y}, :south)
-            _ -> map
+            ">" -> {MapSet.put(east, {x, y}), south}
+            "v" -> {east, MapSet.put(south, {x, y})}
+            _ -> {east, south}
           end
         end)
       end)
 
-    %{
-      map: map,
-      max_x: map |> Map.keys() |> Enum.map(fn {x, _} -> x end) |> Enum.max(),
-      max_y: map |> Map.keys() |> Enum.map(fn {_, y} -> y end) |> Enum.max()
-    }
+    all = MapSet.union(east, south)
+    max_x = Stream.map(all, fn {x, _} -> x end) |> Enum.max()
+    max_y = Stream.map(all, fn {_, y} -> y end) |> Enum.max()
+
+    %{east: east, south: south, all: all, max_x: max_x, max_y: max_y}
   end
 
   def show(state) do
     for y <- 0..state.max_y do
       for x <- 0..state.max_x do
-        case state.map[{x, y}] do
-          nil -> "."
-          :east -> ">"
-          :south -> "v"
+        cond do
+          {x, y} in state.east -> ">"
+          {x, y} in state.south -> "v"
+          true -> "."
         end
       end
     end
@@ -57,57 +58,33 @@ defmodule D25 do
   end
 
   defp move_east(state) do
-    new_map =
-      Enum.reduce(0..state.max_x, %{}, fn x, map ->
-        Enum.reduce(0..state.max_y, map, fn y, map ->
-          case state.map[{x, y}] do
-            :east ->
-              new_x = rem(x + 1, state.max_x + 1)
-              neighbour = state.map[{new_x, y}]
+    east =
+      Enum.reduce(state.east, MapSet.new(), fn {x, y}, east ->
+        new_x = rem(x + 1, state.max_x + 1)
 
-              if is_nil(neighbour) do
-                Map.put(map, {new_x, y}, :east)
-              else
-                Map.put(map, {x, y}, :east)
-              end
-
-            :south ->
-              Map.put(map, {x, y}, :south)
-
-            nil ->
-              map
-          end
-        end)
+        if {new_x, y} in state.all do
+          MapSet.put(east, {x, y})
+        else
+          MapSet.put(east, {new_x, y})
+        end
       end)
 
-    Map.put(state, :map, new_map)
+    %{state | east: east, all: MapSet.union(east, state.south)}
   end
 
   defp move_south(state) do
-    new_map =
-      Enum.reduce(0..state.max_x, %{}, fn x, map ->
-        Enum.reduce(0..state.max_y, map, fn y, map ->
-          case state.map[{x, y}] do
-            :east ->
-              Map.put(map, {x, y}, :east)
+    south =
+      Enum.reduce(state.south, MapSet.new(), fn {x, y}, south ->
+        new_y = rem(y + 1, state.max_y + 1)
 
-            :south ->
-              new_y = rem(y + 1, state.max_y + 1)
-              neighbour = state.map[{x, new_y}]
-
-              if is_nil(neighbour) do
-                Map.put(map, {x, new_y}, :south)
-              else
-                Map.put(map, {x, y}, :south)
-              end
-
-            nil ->
-              map
-          end
-        end)
+        if {x, new_y} in state.all do
+          MapSet.put(south, {x, y})
+        else
+          MapSet.put(south, {x, new_y})
+        end
       end)
 
-    Map.put(state, :map, new_map)
+    %{state | south: south, all: MapSet.union(state.east, south)}
   end
 end
 
