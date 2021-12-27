@@ -44,74 +44,77 @@ defmodule D21 do
     }
   end
 
-  # def p2_2(player1_pos, player2_pos) do
-  #   steps_to_outcomes_count =
-  #     Enum.group_by(
-  #       for(r1 <- 1..3, r2 <- 1..3, r3 <- 1..3, do: r1 + r2 + r3),
-  #       fn x -> x end
-  #     )
-  #     |> Enum.map(fn {k, v} -> {k, length(v)} end)
-  #     |> Enum.into(%{})
+  @all_rolls for r1 <- 1..3,
+                 r2 <- 1..3,
+                 r3 <- 1..3,
+                 do: r1 + r2 + r3
 
-  #   player1_states = %{{0, player1_pos} => 1}
-  #   player2_states = %{{0, player2_pos} => 1}
-  #   player1_wins = 0
-  #   player2_wins = 0
+  @roll_counts Enum.group_by(@all_rolls, fn x -> x end)
+               |> Enum.map(fn {k, v} -> {k, length(v)} end)
+               |> Enum.into(%{})
 
-  #   simulate(
-  #     :player1,
-  #     player1_states,
-  #     player1_wins,
-  #     player2_states,
-  #     player2_wins,
-  #     steps_to_outcomes_count
-  #   )
-  # end
+  @winning_score 12
 
-  # def simulate(
-  #       :player1,
-  #       player1_states,
-  #       player1_wins,
-  #       player2_states,
-  #       player2_wins,
-  #       steps_to_outcomes_count
-  #     ) do
-  #   Enum.reduce(steps_to_outcomes_count, {player1_states, player1_wins, player2_states, player2_wins}, fn {steps, outcomes_count}, acc ->
-  #     {player1_states, player1_wins} =
-  #       Enum.reduce(
-  #         player1_states,
-  #         {%{}, player1_wins},
-  #         fn {{player1_score, player1_pos}, player1_state_count},
-  #            {player1_states, player1_wins} ->
-  #           new_pos = rem(player1_pos + steps - 1, 10) + 1
-  #           new_score = player1_score + new_pos
-  #           new_state_count = player1_state_count * outcomes_count
+  def p2(p1_pos, p2_pos) do
+    {p1_wins, p2_wins, mem, hits} = p2(p1_pos, p2_pos, :player1, 0, 0, 0, 0, %{}, 0)
+    # IO.inspect(mem)
+    IO.inspect(map_size(mem), label: :mem_entries)
+    IO.inspect(hits, label: :hits)
+    {p1_wins, p2_wins}
+  end
 
-  #           if new_score >= 21 do
-  #             {player1_states, player1_wins + new_state_count}
-  #           else
-  #             player1_states = Map.put(player1_states, {new_score, new_pos}, new_state_count)
-  #             {player2_states, player1_wins}
-  #           end
-  #         end
-  #       )
+  def p2(p1_pos, p2_pos, active_player, p1_score, p2_score, p1_wins, p2_wins, mem, hits) do
+    key = {p1_pos, p2_pos, active_player, p1_score, p2_score}
 
-  #     simulate(:player2, player1_states, player1_wins, player2_states, player2_wins, steps_to_outcomes_count)
-  #   end)
-  # end
+    if key in mem do
+      {p1_wins_inc, p2_wins_inc} = mem[key]
+      {p1_wins + p1_wins_inc, p2_wins + p2_wins_inc, mem, hits + 1}
+    else
+      p2_inner(p1_pos, p2_pos, active_player, p1_score, p2_score, p1_wins, p2_wins, mem, hits)
+    end
+  end
 
-  # def simulate(
-  #       :player2,
-  #       player1_states,
-  #       player2_states,
-  #       player1_wins,
-  #       player2_wins,
-  #       steps_to_outcomes_count
-  #     ) do
-  #   # TODO:
-  # end
+  def p2_inner(p1_pos, p2_pos, :player1, p1_score, p2_score, p1_wins, p2_wins, mem, hits) do
+    {new_p1_wins, new_p2_wins, mem, hits_add} =
+      Enum.reduce(@all_rolls, {p1_wins, p2_wins, mem, hits}, fn steps,
+                                                                {p1_wins, p2_wins, mem, hits} ->
+        new_pos = rem(p1_pos + steps - 1, 10) + 1
+        new_score = p1_score + new_pos
 
-  def p2(player1_pos, player2_pos) do
+        if new_score >= @winning_score do
+          {p1_wins + 1, p2_wins, mem, hits}
+        else
+          p2(new_pos, p2_pos, :player2, new_score, p2_score, p1_wins, p2_wins, mem, hits)
+        end
+      end)
+
+    key = {p1_pos, p2_pos, :player1, p1_score, p2_score}
+    mem = Map.put(mem, key, {new_p1_wins - p1_wins, new_p2_wins - p2_wins})
+    {new_p1_wins, new_p2_wins, mem, hits + hits_add}
+  end
+
+  def p2_inner(p1_pos, p2_pos, :player2, p1_score, p2_score, p1_wins, p2_wins, mem, hits) do
+    {new_p1_wins, new_p2_wins, mem, hits_add} =
+      Enum.reduce(@all_rolls, {p1_wins, p2_wins, mem, hits}, fn steps,
+                                                                {p1_wins, p2_wins, mem, hits} ->
+        new_pos = rem(p2_pos + steps - 1, 10) + 1
+        new_score = p2_score + new_pos
+
+        if new_score >= @winning_score do
+          {p1_wins, p2_wins + 1, mem, hits}
+        else
+          p2(p1_pos, new_pos, :player1, p1_score, new_score, p1_wins, p2_wins, mem, hits)
+        end
+      end)
+
+    key = {p1_pos, p2_pos, :player2, p1_score, p2_score}
+    mem = Map.put(mem, key, {new_p1_wins - p1_wins, new_p2_wins - p2_wins})
+    {new_p1_wins, new_p2_wins, mem, hits + hits_add}
+  end
+
+  ### IGNORE STUFF BELOW FOR NOW
+
+  def p2_old(player1_pos, player2_pos) do
     all_possible_roll_sums = for r1 <- 1..3, r2 <- 1..3, r3 <- 1..3, do: r1 + r2 + r3
 
     steps_outcomes_count =
