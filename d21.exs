@@ -53,7 +53,10 @@ defmodule D21 do
                |> Enum.map(fn {k, v} -> {k, length(v)} end)
                |> Enum.into(%{})
 
-  @winning_score 12
+  # 12 score, ~25 sec
+  # 13 score, 125_970_058 msc, {2159295972, 1251104269}
+  # 13 score, 27_202 msc, with roll_counts + times optimization
+  @winning_score 21
 
   def p2(p1_pos, p2_pos) do
     {p1_wins, p2_wins, mem, hits} = p2(p1_pos, p2_pos, :player1, 0, 0, 0, 0, %{}, 0)
@@ -76,15 +79,20 @@ defmodule D21 do
 
   def p2_inner(p1_pos, p2_pos, :player1, p1_score, p2_score, p1_wins, p2_wins, mem, hits) do
     {new_p1_wins, new_p2_wins, mem, hits_add} =
-      Enum.reduce(@all_rolls, {p1_wins, p2_wins, mem, hits}, fn steps,
-                                                                {p1_wins, p2_wins, mem, hits} ->
+      Enum.reduce(@roll_counts, {p1_wins, p2_wins, mem, hits}, fn {steps, times},
+                                                                  {p1_wins, p2_wins, mem, hits} ->
         new_pos = rem(p1_pos + steps - 1, 10) + 1
         new_score = p1_score + new_pos
 
         if new_score >= @winning_score do
-          {p1_wins + 1, p2_wins, mem, hits}
+          {p1_wins + times, p2_wins, mem, hits}
         else
-          p2(new_pos, p2_pos, :player2, new_score, p2_score, p1_wins, p2_wins, mem, hits)
+          {new_p1_wins, new_p2_wins, mem, hits} =
+            p2(new_pos, p2_pos, :player2, new_score, p2_score, p1_wins, p2_wins, mem, hits)
+
+          p1_wins = (new_p1_wins - p1_wins) * times + p1_wins
+          p2_wins = (new_p2_wins - p2_wins) * times + p2_wins
+          {p1_wins, p2_wins, mem, hits}
         end
       end)
 
@@ -95,15 +103,20 @@ defmodule D21 do
 
   def p2_inner(p1_pos, p2_pos, :player2, p1_score, p2_score, p1_wins, p2_wins, mem, hits) do
     {new_p1_wins, new_p2_wins, mem, hits_add} =
-      Enum.reduce(@all_rolls, {p1_wins, p2_wins, mem, hits}, fn steps,
-                                                                {p1_wins, p2_wins, mem, hits} ->
+      Enum.reduce(@roll_counts, {p1_wins, p2_wins, mem, hits}, fn {steps, times},
+                                                                  {p1_wins, p2_wins, mem, hits} ->
         new_pos = rem(p2_pos + steps - 1, 10) + 1
         new_score = p2_score + new_pos
 
         if new_score >= @winning_score do
-          {p1_wins, p2_wins + 1, mem, hits}
+          {p1_wins, p2_wins + times, mem, hits}
         else
-          p2(p1_pos, new_pos, :player1, p1_score, new_score, p1_wins, p2_wins, mem, hits)
+          {new_p1_wins, new_p2_wins, mem, hits} =
+            p2(p1_pos, new_pos, :player1, p1_score, new_score, p1_wins, p2_wins, mem, hits)
+
+          p1_wins = (new_p1_wins - p1_wins) * times + p1_wins
+          p2_wins = (new_p2_wins - p2_wins) * times + p2_wins
+          {p1_wins, p2_wins, mem, hits}
         end
       end)
 
