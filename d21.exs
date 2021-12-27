@@ -44,6 +44,8 @@ defmodule D21 do
     }
   end
 
+  @winning_score 21
+
   @all_rolls for r1 <- 1..3,
                  r2 <- 1..3,
                  r3 <- 1..3,
@@ -53,7 +55,13 @@ defmodule D21 do
                |> Enum.map(fn {k, v} -> {k, length(v)} end)
                |> Enum.into(%{})
 
-  @winning_score 21
+  def move_steps(pos, steps)
+
+  # this saves ~30 seconds, by moving computation of the position shifting logic to compile-time
+  for pos <- 1..10,
+      steps <- 3..9 do
+    def move_steps(unquote(pos), unquote(steps)), do: unquote(rem(pos + steps - 1, 10) + 1)
+  end
 
   def p2(p1_pos, p2_pos) do
     {p1_wins, p2_wins} = p2(p1_pos, p2_pos, :player1, 0, 0, 0, 0)
@@ -64,7 +72,8 @@ defmodule D21 do
   defp p2(p1_pos, p2_pos, :player1, p1_score, p2_score, p1_wins, p2_wins) do
     {new_p1_wins, new_p2_wins} =
       Enum.reduce(@roll_counts, {p1_wins, p2_wins}, fn {steps, times}, {p1_wins, p2_wins} ->
-        {new_pos, new_score} = update_pos_and_score(p1_pos, p1_score, steps)
+        new_pos = move_steps(p1_pos, steps)
+        new_score = p1_score + new_pos
 
         if new_score >= @winning_score do
           {p1_wins + times, p2_wins}
@@ -79,10 +88,12 @@ defmodule D21 do
     {new_p1_wins, new_p2_wins}
   end
 
+  # this is very copy-pastey, but I found it both easier to read & executing faster than using maps for this
   defp p2(p1_pos, p2_pos, :player2, p1_score, p2_score, p1_wins, p2_wins) do
     {new_p1_wins, new_p2_wins} =
       Enum.reduce(@roll_counts, {p1_wins, p2_wins}, fn {steps, times}, {p1_wins, p2_wins} ->
-        {new_pos, new_score} = update_pos_and_score(p2_pos, p2_score, steps)
+        new_pos = move_steps(p2_pos, steps)
+        new_score = p2_score + new_pos
 
         if new_score >= @winning_score do
           {p1_wins, p2_wins + times}
@@ -95,13 +106,6 @@ defmodule D21 do
       end)
 
     {new_p1_wins, new_p2_wins}
-  end
-
-  defp update_pos_and_score(pos, score, steps) do
-    new_pos = rem(pos + steps - 1, 10) + 1
-    new_score = score + new_pos
-
-    {new_pos, new_score}
   end
 
   defp update_wins_a_number_of_times(p1_wins, p2_wins, new_p1_wins, new_p2_wins, times) do
