@@ -162,6 +162,10 @@ off x=18..30,y=-20..-8,z=-3..13
 on x=-41..9,y=-7..43,z=-33..15
 """
 
+# TODO: maybe it makes sense to go through all x, y, and z coordinates, and create
+# those ranges for them separately?
+# then we can count live regions in each range, and get the count of cubes from it
+
 cmds = parse(input)
 active = execute(cmds)
 
