@@ -34,9 +34,19 @@ def is_overlapping(range1, range2):
 
 
 def overlap_ranges(range1, range2):
-    """Assumes that range1 <= range2."""
-    if is_overlapping(range1, range2):
-        return {(range1[0], range2[0] - 1), (range2[0], range1[1]), (range1[1] + 1, range2[1])}
+    """
+    Assumes that range1 <= range2.
+    Always returns non-overlapping regions to make counting active cubes easier.
+    """
+    if is_overlapping(range1, range2) and range1 != range2:
+        if range1[0] == range2[0]:
+            intersection = min(range1[1], range2[1])
+            endpoint = max(range1[1], range2[1])
+            return {(range1[0], intersection), (intersection + 1, endpoint)}
+        elif range1[1] == range2[1]:
+            return {(range1[0], range2[0]), (range2[0] + 1, range2[1])}
+        else:
+            return {(range1[0], range2[0] - 1), (range2[0], range1[1]), (range1[1] + 1, range2[1])}
     else:
         return {range1, range2}
 
@@ -162,12 +172,9 @@ off x=18..30,y=-20..-8,z=-3..13
 on x=-41..9,y=-7..43,z=-33..15
 """
 
-# TODO: maybe it makes sense to go through all x, y, and z coordinates, and create
-# those ranges for them separately?
-# then we can count live regions in each range, and get the count of cubes from it
-
 cmds = parse(input)
 active = execute(cmds)
+len(expand(active))
 
 cube1 = cmds[0]["cube"]
 cube2 = cmds[1]["cube"]
